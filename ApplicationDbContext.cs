@@ -10,6 +10,7 @@ namespace V1_2025_07
             : base(options) { }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<Admin> Admins { get; set; }
     }
 
 }

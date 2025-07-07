@@ -6,7 +6,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using V1_2025_07.Models;
-using V1_2025_07.Services; // EmailSender namespace
+using V1_2025_07.Services;
 
 namespace V1_2025_07.Controllers
 {
@@ -25,7 +25,7 @@ namespace V1_2025_07.Controllers
             _emailSender = emailSender;
         }
 
-        // Step 1: Admin Login (generates and emails OTP)
+        // Step 1: Admin Login (generate & email OTP)
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] AdminLoginDto dto)
         {
