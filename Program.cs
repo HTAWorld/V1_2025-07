@@ -20,7 +20,11 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: corsPolicyName, policy =>
     {
         policy
-            .WithOrigins("https://frontend.multiplayers.in")
+            .WithOrigins(
+                "https://frontend.multiplayers.in",
+                "http://localhost:3000",
+                "https://localhost:3000" // If you use HTTPS locally
+            )
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials(); // Only if you use cookies/auth, otherwise remove
