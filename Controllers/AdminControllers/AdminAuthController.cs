@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -78,6 +79,139 @@ namespace V1_2025_07.Controllers
             return Ok(new { token });
         }
 
+        ////======================me profile========================
+
+        //[HttpGet("me")]
+        //[Authorize(Roles = "Admin")]
+        //public async Task<IActionResult> GetMyProfile()
+        //{
+        //    // Extract claims
+        //    var sub = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+        //    var email = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Email)?.Value;
+        //    var expStr = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Exp)?.Value;
+
+        //    if (string.IsNullOrEmpty(sub) || string.IsNullOrEmpty(email))
+        //        return Unauthorized("Invalid token.");
+
+        //    if (!int.TryParse(sub, out int adminId))
+        //        return Unauthorized("Invalid admin ID in token.");
+
+        //    // Fetch admin data from DB
+        //    var admin = await _context.Admins
+        //        .Where(a => a.Id == adminId && a.IsActive && !a.IsDeleted)
+        //        .Select(a => new {
+        //            id = a.Id,
+        //            username = a.Username,
+        //            role = a.Role // Adjust to your actual property
+        //        })
+        //        .FirstOrDefaultAsync();
+
+        //    if (admin == null)
+        //        return NotFound("Admin not found.");
+
+        //    // Parse expiry if present
+        //    long? exp = null;
+        //    if (!string.IsNullOrEmpty(expStr) && long.TryParse(expStr, out var expParsed))
+        //        exp = expParsed;
+
+        //    // Build JSON result
+        //    var result = new
+        //    {
+        //        sub = adminId,
+        //        email = email,
+        //        admin = admin,
+        //        exp = exp
+        //    };
+
+        //    return Ok(result);
+        //}
+
+
+        //// ================= GET /me ================= working
+        //[HttpGet("me")]
+        //[Authorize(Roles = "Admin")]
+        //public async Task<IActionResult> GetMyProfile()
+        //{
+        //    // Get the admin ID from 'sub' claim (or NameIdentifier)
+        //    var sub = User.Claims.FirstOrDefault(c =>
+        //        c.Type == JwtRegisteredClaimNames.Sub || c.Type == ClaimTypes.NameIdentifier
+        //    )?.Value;
+
+        //    if (string.IsNullOrEmpty(sub) || !int.TryParse(sub, out int adminId))
+        //        return Unauthorized("Invalid admin ID in token.");
+
+        //    // Fetch admin data from DB
+        //    var admin = await _context.Admins
+        //        .Where(a => a.Id == adminId && a.IsActive && !a.IsDeleted)
+        //        .Select(a => new
+        //        {
+        //            id = a.Id,
+        //            username = a.Username,
+        //            role = a.Role
+        //        })
+        //        .FirstOrDefaultAsync();
+
+        //    if (admin == null)
+        //        return NotFound("Admin not found.");
+
+        //    return Ok(admin);
+        //}
+
+
+        [HttpGet("me")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetMyProfile()
+        {
+            // Extract claims
+            var sub = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+         ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var email = User.FindFirst(JwtRegisteredClaimNames.Email)?.Value
+                     ?? User.FindFirst(ClaimTypes.Email)?.Value;
+            var expStr = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Exp)?.Value
+                      ?? User.Claims.FirstOrDefault(c => c.Type == "exp")?.Value;
+
+            if (string.IsNullOrEmpty(sub) || string.IsNullOrEmpty(email))
+                return Unauthorized("Invalid token.");
+
+            if (!int.TryParse(sub, out int adminId))
+                return Unauthorized("Invalid admin ID in token.");
+
+            // Fetch admin data from DB
+            var admin = await _context.Admins
+                .Where(a => a.Id == adminId && a.IsActive && !a.IsDeleted)
+                .Select(a => new
+                {
+                    id = a.Id,
+                    username = a.Username,
+                    role = a.Role
+                })
+                .FirstOrDefaultAsync();
+
+            if (admin == null)
+                return NotFound("Admin not found.");
+
+            // Parse expiry if present
+            long? exp = null;
+            if (!string.IsNullOrEmpty(expStr) && long.TryParse(expStr, out var expParsed))
+                exp = expParsed;
+
+            // Build JSON result as you want
+            var result = new
+            {
+                sub = adminId,
+                email = email,
+                admin = admin,
+                exp = exp
+            };
+
+            return Ok(result);
+        }
+
+
+
+
+
+
         // ===== Helper Methods =====
 
         private string GenerateJwt(Admin admin)
@@ -116,17 +250,18 @@ namespace V1_2025_07.Controllers
 
             return stored.SequenceEqual(computed);
         }
-    }
 
-    // DTOs
-    public class AdminLoginDto
-    {
-        public string Email { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-    }
-    public class Admin2FADto
-    {
-        public string Email { get; set; } = string.Empty;
-        public string Code { get; set; } = string.Empty;
+
+        // DTOs
+        public class AdminLoginDto
+        {
+            public string Email { get; set; } = string.Empty;
+            public string Password { get; set; } = string.Empty;
+        }
+        public class Admin2FADto
+        {
+            public string Email { get; set; } = string.Empty;
+            public string Code { get; set; } = string.Empty;
+        }
     }
 }
