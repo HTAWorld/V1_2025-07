@@ -26,6 +26,7 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                 "https://frontend.multiplayers.in",
+                "http://frontend.multiplayers.in",
                 "http://localhost:3000",
                 "https://localhost:3000"
             )
