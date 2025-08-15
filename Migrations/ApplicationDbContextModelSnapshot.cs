@@ -66,7 +66,7 @@ namespace V1_2025_07.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Admins", (string)null);
+                    b.ToTable("Admins");
                 });
 
             modelBuilder.Entity("V1_2025_07.Models.User", b =>
@@ -167,7 +167,7 @@ namespace V1_2025_07.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 #pragma warning restore 612, 618
         }

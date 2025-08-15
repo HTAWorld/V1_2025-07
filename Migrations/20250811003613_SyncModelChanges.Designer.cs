@@ -12,8 +12,8 @@ using V1_2025_07;
 namespace V1_2025_07.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250715214441_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250811003613_SyncModelChanges")]
+    partial class SyncModelChanges
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
