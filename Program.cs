@@ -18,19 +18,19 @@ builder.Services.AddScoped<EmailSender>();
 // Add controllers
 builder.Services.AddControllers();
 
-// CORS
-var corsPolicyName = "FrontendProd";
+// --- CORS: allow frontend.localhost:3000, your production frontend, and allow credentials ---
+var corsPolicyName = "FrontendCors";
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: corsPolicyName, policy =>
+    options.AddPolicy(corsPolicyName, policy =>
     {
         policy.WithOrigins(
                 "https://frontend.multiplayers.in",
                 "http://localhost:3000",
                 "https://localhost:3000",
-                 "https://localhost:7127",
-                    "http://localhost:5173",
-                    "https://localhost:5173"
+                "https://localhost:7127",
+                "http://localhost:5173",
+                "https://localhost:5173"
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
@@ -38,7 +38,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// JWT Authentication
+// --- JWT Authentication ---
 var jwtSecret = builder.Configuration["Jwt:Secret"] ?? throw new Exception("JWT secret not set");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -53,7 +53,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Swagger/OpenAPI
+// --- Swagger/OpenAPI ---
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -63,7 +63,6 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1",
         Description = "API documentation for the Multiplayer Tournament platform."
     });
-    // JWT auth in Swagger UI
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Example: 'Bearer {token}'",
@@ -85,12 +84,13 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+// --- CORS must be before authentication/authorization ---
 app.UseCors(corsPolicyName);
 
-// Add authentication and authorization to the middleware
 app.UseAuthentication();
 app.UseAuthorization();
 
+// --- Swagger only in dev/prod ---
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();
@@ -102,6 +102,5 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 }
 
 app.MapControllers();
-
 
 app.Run();
