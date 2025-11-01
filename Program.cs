@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json;
 using V1_2025_07;
 using V1_2025_07.Services;
 
@@ -14,6 +17,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Add Email sender service
 builder.Services.AddScoped<EmailSender>();
+
+builder.Services.AddHealthChecks()
+    .AddCheck("api", () => HealthCheckResult.Healthy("API running")) // API health
+    .AddSqlServer(builder.Configuration.GetConnectionString("monsterconnection"), name: "mssql"); // MSSQL health
+
 
 // Add controllers
 builder.Services.AddControllers();
@@ -102,5 +110,23 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 }
 
 app.MapControllers();
+
+app.MapHealthChecks("/", new HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var result = JsonSerializer.Serialize(new
+        {
+            status = report.Status.ToString(),
+            checks = report.Entries.Select(e => new {
+                Component = e.Key,
+                Status = e.Value.Status.ToString()
+            }),
+            serverTime = DateTime.UtcNow
+        });
+        await context.Response.WriteAsync(result);
+    }
+});
 
 app.Run();
